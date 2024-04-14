@@ -2,16 +2,13 @@ cmake_minimum_required(VERSION 3.16..3.24)
 
 project(Core	
     VERSION 1.0.0
-    DESCRIPTION "Core description"
+    DESCRIPTION "Genetic algorithm implementation"
     LANGUAGES CXX
     )  
 
 add_library(Core 
-  	src/arithmetic/add.cpp
-  	src/arithmetic/sub.cpp
-  	src/arithmetic/mul.cpp
-  	src/arithmetic/div.cpp
-  	src/printer/print.cpp
+    src/genetic-algorithm/genetic_algorithm.cpp
+    src/genetic-algorithm/traveling_salesman.cpp
   	)
 add_library(Core::Core ALIAS Core)
 
@@ -21,9 +18,3 @@ target_include_directories(
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
 	)
-
-target_link_libraries(
-    Core
-        PRIVATE
-            fmt::fmt
-    )

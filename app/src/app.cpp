@@ -1,19 +1,42 @@
-#include <arithmetic/add.h>
-#include <arithmetic/sub.h>
-#include <arithmetic/mul.h>
-#include <arithmetic/div.h>
+#include <genetic-algorithm/traveling_salesman.h>
+#include <genetic-algorithm/genetic_algorithm.h>
+#include <visualizer/visualizer.h>
 
-#include <printer/print.h>
+#include <iostream>
+
+using namespace core;
+using namespace vis;
 
 int main()
 {
-    int a = 5;
-    int b = 4;
+    std::vector<Town> towns = {
+        {100.0f, 100.0f},
+        {200.0f, 200.0f},
+        {300.0f, 400.0f},
+        {500.0f, 300.0f},
+        {600.0f, 100.0f},
+        {700.0f, 200.0f},
+        {400.0f, 100.0f},
+        {200.0f, 500.0f},
+        {300.0f, 200.0f},
+        {100.0f, 400.0f}
+    };
 
-    int res1 = core::add(a, b);
-    int res2 = core::sub(a, b);
-    int res3 = core::mul(a, b);
-    double res4 = core::div(a, b);
+    // TSP
+    TravelingSalesmanProblem tsp{};
+    tsp.saveTownsToFile("towns.txt", towns);
+    tsp.loadTownsFromFile("towns.txt");
 
-    core::printResults(a, b);
+    // GA
+    const size_t populationSize = 50;
+    const size_t selectionSize = 6;
+    const size_t matingPoolSize = 4;
+    GeneticAlgorithm ga(tsp, populationSize, selectionSize, matingPoolSize);
+
+    // Visualizer
+    GAVisualizer visualizer(ga);
+
+    visualizer.draw();
+
+    return 0;
 }
