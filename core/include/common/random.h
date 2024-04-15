@@ -48,9 +48,15 @@ namespace Random
     // Sample call: Random::get(1L, 6L);             // returns long
     // Sample call: Random::get(1u, 6u);             // returns unsigned int
     template <typename T>
-    T get(T min, T max)
+    inline T get(T min, T max)
     {
         return std::uniform_int_distribution<T>{min, max}(mt);
+    }
+
+    template <>
+    inline float get(float min, float max)
+    {
+        return std::uniform_real_distribution<float>{min, max}(mt);
     }
 
     // Generate a random value between [min, max] (inclusive)

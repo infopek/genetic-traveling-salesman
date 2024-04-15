@@ -15,7 +15,9 @@ namespace core
             const TravelingSalesmanProblem& tsp,
             size_t populationSize,
             size_t selectionSize,
-            size_t matingPoolSize
+            size_t matingPoolSize,
+            float crossoverRate,
+            float mutationRate
         );
         ~GeneticAlgorithm();
 
@@ -23,22 +25,25 @@ namespace core
 
         inline const std::vector<Town>& getBestRoute() const { return m_fittest->route; }
         inline int getGeneration() const { return m_numGeneration; }
+        inline float getBestFitness() const { return m_fittest->fitness; }
 
     private:
         void initPopulation();
 
-        void evaluate();
-
+        // Genetic algo methods
         std::unordered_set<Offspring> select() const;
 
         Offspring crossover(const std::vector<Offspring>& parents) const;
 
         void mutate(Offspring& offspring) const;
 
-        std::vector<Offspring> chooseParentsRandomly(const std::unordered_set<Offspring>& matingPool) const;
+        void evaluate();
 
         float fitness(const Offspring& offspring);
 
+        std::vector<Offspring> chooseParentsRandomly(const std::unordered_set<Offspring>& matingPool) const;
+
+        // Other
         void updateBestRoute();
 
     private:
@@ -47,6 +52,10 @@ namespace core
         size_t m_populationSize{};
         size_t m_matingPoolSize{};
         size_t m_selectionSize{};
+
+        float m_crossoverRate{};
+        float m_mutationRate{};
+
         std::vector<Offspring> m_population{};
         const Offspring* m_fittest;
 

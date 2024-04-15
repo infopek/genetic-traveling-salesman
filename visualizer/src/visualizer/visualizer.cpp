@@ -1,11 +1,15 @@
 #include <visualizer/visualizer.h>
 
+#include <cmath>
+
 namespace vis
 {
-    GAVisualizer::GAVisualizer(core::GeneticAlgorithm& ga)
-        : m_ga{ ga }
+    GAVisualizer::GAVisualizer(core::GeneticAlgorithm& ga, unsigned int windowWidth, unsigned int windowHeight)
+        : m_ga{ ga },
+        m_windowWidth{ windowWidth },
+        m_windowHeight{ windowHeight }
     {
-        m_window.create(sf::VideoMode(800, 600), "Genetic Algorithm for TSP");
+        m_window.create(sf::VideoMode(windowWidth, windowHeight), "Genetic Algorithm for TSP");
         m_lines.setPrimitiveType(sf::LinesStrip);
 
         if (!m_font.loadFromFile("../../../visualizer/res/fonts/arial.ttf")) {}
@@ -23,8 +27,10 @@ namespace vis
             while (m_window.pollEvent(event))
             {
                 if (event.type == sf::Event::Closed)
+                {
                     m_window.close();
-                if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+                }
+                else if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
                 {
                     m_ga.step();
                     updateRoute();
@@ -32,7 +38,6 @@ namespace vis
             }
 
             m_window.clear(sf::Color::White);
-
 
             drawLines();
             drawPoints();
@@ -82,14 +87,24 @@ namespace vis
 
     void GAVisualizer::displayStats()
     {
+        // Generation number
         sf::Text generationText;
         generationText.setFont(m_font);
         generationText.setString("Generation: " + std::to_string(m_ga.getGeneration()));
-        generationText.setCharacterSize(24);
+        generationText.setCharacterSize(15);
         generationText.setFillColor(sf::Color::Black);
-        generationText.setPosition(600, 0);
+        generationText.setPosition(m_windowWidth - 150, 0);
+
+        // Best fitness
+        sf::Text bestFitness;
+        bestFitness.setFont(m_font);
+        bestFitness.setString("Best fitness: " + std::to_string(static_cast<int>(m_ga.getBestFitness())));
+        bestFitness.setCharacterSize(15);
+        bestFitness.setFillColor(sf::Color::Black);
+        bestFitness.setPosition(m_windowWidth - 150, 30);
 
         m_window.draw(generationText);
+        m_window.draw(bestFitness);
     }
 
     void GAVisualizer::updateRoute()

@@ -31,4 +31,3 @@ namespace core
         std::vector<Town> m_towns;
     };
 }
-

@@ -1,28 +1,37 @@
 #include <genetic-algorithm/genetic_algorithm.h>
-
-#include "../random.h"
+#include <common/random.h>
 
 #include <algorithm>
+#include <iostream>
 #include <cassert>
+#include <unordered_map>
 
 namespace core
 {
     GeneticAlgorithm::GeneticAlgorithm(
         const TravelingSalesmanProblem& tsp,
-        size_t m_populationSize,
+        size_t populationSize,
         size_t selectionSize,
-        size_t matingPoolSize
+        size_t matingPoolSize,
+        float crossoverRate,
+        float mutationRate
     )
         :
         m_tsp{ tsp },
-        m_populationSize{ m_populationSize },
+        m_populationSize{ populationSize },
         m_selectionSize{ selectionSize },
-        m_matingPoolSize{ matingPoolSize }
+        m_matingPoolSize{ matingPoolSize },
+        m_crossoverRate{ crossoverRate },
+        m_mutationRate{ mutationRate }
     {
-        assert(m_populationSize > 0 &&
-            m_selectionSize > 0 &&
-            m_matingPoolSize > 0 &&
-            "Size parameters have to be greater than 0");
+        assert(populationSize > 0
+            && selectionSize > 0
+            && matingPoolSize > 0
+            && "Size parameters have to be greater than 0");
+
+        assert(0.0f <= crossoverRate && crossoverRate <= 1.0f
+            && 0.0f <= mutationRate && mutationRate <= 1.0f
+            && "Crossover and mutation probability have to be in [0, 1]");
 
         initPopulation();
         evaluate();
@@ -43,8 +52,12 @@ namespace core
         {
             std::vector<Offspring> parents = chooseParentsRandomly(matingPool);
 
-            Offspring newOffspring = crossover(parents);
-            mutate(newOffspring);
+            Offspring newOffspring = (Random::get<float>(0.0f, 1.0f) <= m_crossoverRate)
+                ? crossover(parents)
+                : parents[Random::get(0, parents.size() - 1)];
+
+            if (Random::get<float>(0.0f, 1.0f) <= m_mutationRate)
+                mutate(newOffspring);
 
             newPopulation.push_back(newOffspring);
         }
@@ -61,21 +74,21 @@ namespace core
         m_population.reserve(m_populationSize);
         for (size_t i = 0; i < m_populationSize; i++)
         {
-            // Shuffle a copy of towns
             std::vector<Town> randomRoute = m_tsp.getTowns();
             std::shuffle(randomRoute.begin(), randomRoute.end(), Random::mt);
 
-            Offspring offspring{ .route = randomRoute };
+            Offspring offspring;
+            offspring.route = randomRoute;
             m_population.push_back(offspring);
         }
     }
 
     std::unordered_set<Offspring> GeneticAlgorithm::select() const
     {
-        std::unordered_set<Offspring> selected{};
+        std::unordered_set<Offspring> matingPool{};
 
         // Perform tournament selection
-        while (selected.size() < m_matingPoolSize)
+        while (matingPool.size() < m_matingPoolSize)
         {
             std::vector<const Offspring*> tournamentParticipants{};
             for (size_t i = 0; i < m_matingPoolSize; ++i)
@@ -89,34 +102,53 @@ namespace core
                     return a->fitness < b->fitness;
                 });
 
-            selected.insert(*bestParticipant);
+            matingPool.insert(*bestParticipant);
         }
 
-        return selected;
+        return matingPool;
     }
 
     Offspring GeneticAlgorithm::crossover(const std::vector<Offspring>& parents) const
     {
-        // Randomly select two distinct points in the route
-        size_t point1 = Random::get(0, parents[0].route.size() - 1);
-        size_t point2 = Random::get(0, parents[0].route.size() - 1);
-        while (point1 == point2)
-            point2 = Random::get(0, parents[0].route.size() - 1);
-        if (point1 > point2)
-            std::swap(point1, point2);
+        const size_t numParents = parents.size();
+        const size_t numTowns = m_tsp.getTowns().size();
 
-        // Create the child's route by copying a segment from the first parent
-        Offspring child;
-        child.route.reserve(parents[0].route.size());
-        child.route.insert(child.route.end(), parents[0].route.begin() + point1, parents[0].route.begin() + point2);
+        // Get two parents
+        size_t parent1Idx = Random::get(0, numParents - 1);
+        size_t parent2Idx = Random::get(0, numParents - 1);
+        while (parent1Idx == parent2Idx)
+            parent2Idx = Random::get(0, numParents - 1);
 
-        // Fill the rest of the child's route with cities from the second parent
-        for (const Town& town : parents[1].route)
+        const auto& parent1 = parents[parent1Idx];
+        const auto& parent2 = parents[parent2Idx];
+
+        // Get random range [0, numTowns)
+        const int r1 = Random::get(0, numTowns - 1);
+        const int r2 = Random::get(0, numTowns - 1);
+
+        const int lo = std::min(r1, r2);
+        const int hi = std::max(r1, r2);
+
+        // Copy the range of parent1 to child
+        Offspring child{};
+        auto& route = child.route;
+        route.resize(numTowns);
+        for (int i = lo; i <= hi; i++)
+            route[i] = parent1.route[i];
+
+        // Fill rest with other parent
+        int childIdx = (hi + 1) % numTowns;
+        int parentIdx = (hi + 1) % numTowns;
+        int missing = numTowns - (hi - lo + 1);
+        while (missing > 0)
         {
-            if (!std::count(child.route.begin(), child.route.end(), town))
-            {
-                child.route.push_back(town);
-            }
+            while (std::find(route.begin(), route.end(), parent2.route[parentIdx]) != route.end())
+                parentIdx = (parentIdx + 1) % numTowns;
+
+            route[childIdx] = parent2.route[parentIdx];
+            childIdx = (childIdx + 1) % numTowns;
+            parentIdx = (parentIdx + 1) % numTowns;
+            --missing;
         }
 
         return child;
@@ -124,12 +156,19 @@ namespace core
 
     void GeneticAlgorithm::mutate(Offspring& offspring) const
     {
+        const size_t numTowns = m_tsp.getTowns().size();
 
+        size_t gene1 = Random::get(0, numTowns - 1);
+        size_t gene2 = Random::get(0, numTowns - 1);
+        while (gene1 == gene2)
+            gene2 = Random::get(0, numTowns - 1);
+
+        std::swap(offspring.route[gene1], offspring.route[gene2]);
     }
 
     std::vector<Offspring> GeneticAlgorithm::chooseParentsRandomly(const std::unordered_set<Offspring>& matingPool) const
     {
-        std::vector<Offspring> parents;
+        std::vector<Offspring> parents{};
 
         std::vector<Offspring> poolVector(matingPool.begin(), matingPool.end());
 

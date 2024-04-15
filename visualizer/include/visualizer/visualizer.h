@@ -9,7 +9,7 @@ namespace vis
     class GAVisualizer
     {
     public:
-        GAVisualizer(core::GeneticAlgorithm& ga);
+        GAVisualizer(core::GeneticAlgorithm& ga, unsigned int windowWidth, unsigned int windowHeight);
         ~GAVisualizer();
 
         void draw();
@@ -26,6 +26,9 @@ namespace vis
     private:
         core::GeneticAlgorithm& m_ga;
         std::vector<sf::Vector2f> m_route;
+
+        unsigned int m_windowWidth{};
+        unsigned int m_windowHeight{};
 
         sf::RenderWindow m_window;
         sf::VertexArray m_lines;

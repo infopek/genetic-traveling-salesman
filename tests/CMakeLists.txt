@@ -1,5 +1,5 @@
 if(BUILD_TESTING)
-    add_executable(Test src/ga-tests/ga_test.cpp)
+    add_executable(Test src/sample_test.cpp)
 
     find_package(Core REQUIRED)
 

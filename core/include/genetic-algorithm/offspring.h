@@ -4,24 +4,28 @@
 
 namespace core
 {
+    static int64_t offspringId = 0;
+
     struct Offspring
     {
+        Offspring()
+            : id(offspringId++)
+        {
+        }
+
+        int64_t id;
         std::vector<Town> route{};
         float fitness{};
 
         bool operator==(const Offspring& other) const
         {
-            return route == other.route && fitness == other.fitness;
+            return id == other.id;
         }
 
         friend std::size_t hashValue(const Offspring& offspring)
         {
             std::size_t seed = 0;
-            for (const auto& town : offspring.route)
-            {
-                seed ^= std::hash<float>{}(town.x) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-                seed ^= std::hash<float>{}(town.y) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            }
+            seed ^= std::hash<int64_t>{}(offspring.id);
             seed ^= std::hash<float>{}(offspring.fitness) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             return seed;
         }

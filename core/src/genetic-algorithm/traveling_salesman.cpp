@@ -13,13 +13,10 @@ namespace core
     void TravelingSalesmanProblem::loadTownsFromFile(const std::string& fileName)
     {
         std::ifstream ftowns(fileName);
-        while (!ftowns.eof())
-        {
-            Town town;
-            ftowns >> town.x;
-            ftowns >> town.y;
+        Town town{};
+        while (ftowns >> town.x >> town.y) {
             m_towns.push_back(town);
-        };
+        }
         ftowns.close();
     }
 
