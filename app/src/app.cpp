@@ -10,19 +10,12 @@ using namespace vis;
 
 int main()
 {
-    // Parameters
+    // Window settings
     const unsigned int windowWidth = 1200;
     const unsigned int windowHeight = 800;
 
-    const int numTowns = 41;
-
-    const size_t populationSize = 1000;
-    const size_t selectionSize = 120;
-    const size_t matingPoolSize = 60;   // shouldn't be much higher -> lag!
-    const float crossoverRate = 0.78f;
-    const float mutationRate = 0.5f;
-
     // Towns
+    const int numTowns = 41;
     std::vector<Town> towns(numTowns);
     for (int i = 0; i < numTowns; i++)
     {
@@ -38,16 +31,11 @@ int main()
     tsp.loadTownsFromFile("towns.txt");
 
     // GA
-    GeneticAlgorithm ga(tsp,
-        populationSize,
-        selectionSize,
-        matingPoolSize,
-        crossoverRate,
-        mutationRate);
+    Parameter parameter{};
+    GeneticAlgorithm ga(tsp, parameter);
 
     // Visualizer
     GAVisualizer visualizer(ga, windowWidth, windowHeight);
-
     visualizer.draw();
 
     return 0;

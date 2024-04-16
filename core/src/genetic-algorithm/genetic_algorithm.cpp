@@ -8,34 +8,11 @@
 
 namespace core
 {
-    GeneticAlgorithm::GeneticAlgorithm(
-        const TravelingSalesmanProblem& tsp,
-        size_t populationSize,
-        size_t selectionSize,
-        size_t matingPoolSize,
-        float crossoverRate,
-        float mutationRate
-    )
-        :
-        m_tsp{ tsp },
-        m_populationSize{ populationSize },
-        m_selectionSize{ selectionSize },
-        m_matingPoolSize{ matingPoolSize },
-        m_crossoverRate{ crossoverRate },
-        m_mutationRate{ mutationRate }
+    GeneticAlgorithm::GeneticAlgorithm(const TravelingSalesmanProblem& tsp, const Parameter& parameter)
+        : m_tsp{ tsp }, m_parameter{ parameter }
     {
-        assert(populationSize > 0
-            && selectionSize > 0
-            && matingPoolSize > 0
-            && "Size parameters have to be greater than 0");
-
-        assert(0.0f <= crossoverRate && crossoverRate <= 1.0f
-            && 0.0f <= mutationRate && mutationRate <= 1.0f
-            && "Crossover and mutation probability have to be in [0, 1]");
-
         initPopulation();
         evaluate();
-        m_fittest = &m_population[0];
     }
 
     GeneticAlgorithm::~GeneticAlgorithm()
@@ -47,16 +24,16 @@ namespace core
         std::unordered_set<Offspring> matingPool = select();
 
         std::vector<Offspring> newPopulation{};
-        newPopulation.reserve(m_populationSize);
-        while (newPopulation.size() < m_populationSize)
+        newPopulation.reserve(m_parameter.getPopulationSize());
+        while (newPopulation.size() < m_parameter.getPopulationSize())
         {
             std::vector<Offspring> parents = chooseParentsRandomly(matingPool);
 
-            Offspring newOffspring = (Random::get<float>(0.0f, 1.0f) <= m_crossoverRate)
+            Offspring newOffspring = (Random::get<float>(0.0f, 1.0f) <= m_parameter.getCrossoverRate())
                 ? crossover(parents)
                 : parents[Random::get(0, parents.size() - 1)];
 
-            if (Random::get<float>(0.0f, 1.0f) <= m_mutationRate)
+            if (Random::get<float>(0.0f, 1.0f) <= m_parameter.getMutationRate())
                 mutate(newOffspring);
 
             newPopulation.push_back(newOffspring);
@@ -64,15 +41,14 @@ namespace core
 
         m_population = newPopulation;
         evaluate();
-        updateBestRoute();
 
         ++m_numGeneration;
     }
 
     void GeneticAlgorithm::initPopulation()
     {
-        m_population.reserve(m_populationSize);
-        for (size_t i = 0; i < m_populationSize; i++)
+        m_population.reserve(m_parameter.getPopulationSize());
+        for (size_t i = 0; i < m_parameter.getPopulationSize(); i++)
         {
             std::vector<Town> randomRoute = m_tsp.getTowns();
             std::shuffle(randomRoute.begin(), randomRoute.end(), Random::mt);
@@ -88,12 +64,12 @@ namespace core
         std::unordered_set<Offspring> matingPool{};
 
         // Perform tournament selection
-        while (matingPool.size() < m_matingPoolSize)
+        while (matingPool.size() < m_parameter.getMatingPoolSize())
         {
             std::vector<const Offspring*> tournamentParticipants{};
-            for (size_t i = 0; i < m_matingPoolSize; ++i)
+            for (size_t i = 0; i < m_parameter.getMatingPoolSize(); ++i)
             {
-                const Offspring& participant = m_population[Random::get(0, m_populationSize - 1)];
+                const Offspring& participant = m_population[Random::get(0, m_parameter.getPopulationSize() - 1)];
                 tournamentParticipants.push_back(&participant);
             }
 
@@ -113,7 +89,7 @@ namespace core
         const size_t numParents = parents.size();
         const size_t numTowns = m_tsp.getTowns().size();
 
-        // Get two parents
+        // Get two distinct parents
         size_t parent1Idx = Random::get(0, numParents - 1);
         size_t parent2Idx = Random::get(0, numParents - 1);
         while (parent1Idx == parent2Idx)
@@ -170,37 +146,27 @@ namespace core
     {
         std::vector<Offspring> parents{};
 
-        std::vector<Offspring> poolVector(matingPool.begin(), matingPool.end());
+        std::vector<Offspring> pool(matingPool.begin(), matingPool.end());
 
-        size_t selectionSize = std::min(m_selectionSize, m_matingPoolSize);
-
-        std::sample(poolVector.begin(), poolVector.end(),
-            std::back_inserter(parents), selectionSize, Random::mt);
+        std::sample(pool.begin(), pool.end(),
+            std::back_inserter(parents), m_parameter.getParentSelectionSize(), Random::mt);
 
         return parents;
     }
 
     void GeneticAlgorithm::evaluate()
     {
+        m_fittest = &m_population[0];
         for (auto& offspring : m_population)
         {
             offspring.fitness = fitness(offspring);
+            if (offspring.fitness < m_fittest->fitness)
+                m_fittest = &offspring;
         }
     }
 
     float GeneticAlgorithm::fitness(const Offspring& offspring)
     {
         return m_tsp.objective(offspring.route);
-    }
-
-    void GeneticAlgorithm::updateBestRoute()
-    {
-        for (const auto& offspring : m_population)
-        {
-            if (offspring.fitness < m_fittest->fitness)
-            {
-                m_fittest = &offspring;
-            }
-        }
     }
 }

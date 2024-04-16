@@ -9,6 +9,7 @@ project(Core
 add_library(Core 
     src/genetic-algorithm/genetic_algorithm.cpp
     src/genetic-algorithm/traveling_salesman.cpp
+    src/genetic-algorithm/parameter.cpp
   	)
 add_library(Core::Core ALIAS Core)
 

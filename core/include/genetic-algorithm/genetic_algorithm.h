@@ -2,6 +2,7 @@
 
 #include <genetic-algorithm/traveling_salesman.h>
 #include <genetic-algorithm/offspring.h>
+#include <genetic-algorithm/parameter.h>
 
 #include <unordered_set>
 #include <vector>
@@ -11,14 +12,7 @@ namespace core
     class GeneticAlgorithm
     {
     public:
-        GeneticAlgorithm(
-            const TravelingSalesmanProblem& tsp,
-            size_t populationSize,
-            size_t selectionSize,
-            size_t matingPoolSize,
-            float crossoverRate,
-            float mutationRate
-        );
+        GeneticAlgorithm(const TravelingSalesmanProblem& tsp, const Parameter& parameter);
         ~GeneticAlgorithm();
 
         void step();
@@ -43,18 +37,9 @@ namespace core
 
         std::vector<Offspring> chooseParentsRandomly(const std::unordered_set<Offspring>& matingPool) const;
 
-        // Other
-        void updateBestRoute();
-
     private:
         TravelingSalesmanProblem m_tsp{};
-
-        size_t m_populationSize{};
-        size_t m_matingPoolSize{};
-        size_t m_selectionSize{};
-
-        float m_crossoverRate{};
-        float m_mutationRate{};
+        Parameter m_parameter{};
 
         std::vector<Offspring> m_population{};
         const Offspring* m_fittest;
