@@ -14,14 +14,20 @@ git clone --recursive https://github.com/infopek/genetic-traveling-salesman.git
 ```bash
 cd ./genetic-traveling-salesman/
 ```
-3. Generate build files:
+3. Generate build files (debug):
 ```bash
 cmake --preset=x64-debug
 ```
-4. Build the project:
+4. Build the project (debug):
 ```bash
 cd ./build-x64-debug/
 cmake --build .
+```
+If you want a Release build
+```bash
+cmake --preset=x64-release
+cd ./build-x64-release/
+cmake --build . --config Release
 ```
 5. Run unit tests (there are none; genetic algorithm is mostly random):
 ```bash
