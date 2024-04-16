@@ -14,13 +14,13 @@ int main()
     const unsigned int windowWidth = 1200;
     const unsigned int windowHeight = 800;
 
-    const int numTowns = 20;
+    const int numTowns = 41;
 
-    const size_t populationSize = 100;
-    const size_t selectionSize = 10;
-    const size_t matingPoolSize = 14;
+    const size_t populationSize = 1000;
+    const size_t selectionSize = 120;
+    const size_t matingPoolSize = 60;   // shouldn't be much higher -> lag!
     const float crossoverRate = 0.78f;
-    const float mutationRate = 0.4f;
+    const float mutationRate = 0.5f;
 
     // Towns
     std::vector<Town> towns(numTowns);
