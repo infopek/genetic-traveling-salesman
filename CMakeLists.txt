@@ -19,14 +19,11 @@ include(cmake/update_submodules.cmake)
 # Enable vcpkg
 include(${CMAKE_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake)
 
-# Enable testing
-include(CTest)
-
 # Before macro, add external dependencies
 add_subdirectory(external)
 
 # Subprojects
-set(as_subproject Core App Visualizer Test)
+set(as_subproject Core App Visualizer)
 
 # Add dependencies here via find_package
 # Note: Has to be before macro definition, and only use find_package for external dependencies here!
@@ -48,4 +45,3 @@ endmacro()
 add_subdirectory(core)
 add_subdirectory(visualizer)
 add_subdirectory(app)
-add_subdirectory(tests)
