@@ -14,18 +14,18 @@ git clone --recursive https://github.com/infopek/genetic-traveling-salesman.git
 ```bash
 cd ./genetic-traveling-salesman/
 ```
-3. Generate build files (debug):
+3. Generate build files:
 ```bash
-cmake --preset=x64-debug
+cmake --preset=x64-<debug/release>
 ```
-4. Build the project (debug):
+4. Build the project:
+### Debug
 ```bash
 cd ./build-x64-debug/
 cmake --build .
 ```
-If you want a Release build
+### Release
 ```bash
-cmake --preset=x64-release
 cd ./build-x64-release/
 cmake --build . --config Release
 ```
